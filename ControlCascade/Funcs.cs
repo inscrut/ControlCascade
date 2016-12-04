@@ -176,5 +176,14 @@ namespace ControlCascade
                 else Console.WriteLine();
             }
         }
+
+        internal static string getArgs(XElement name) //24 25 "-mode 1 -outfile Bad.txt -outdir Bad"
+        {
+            foreach (XElement item in name.Elements())
+            {
+                string s= item.Value;
+            }
+            return "";
+        }
     }
 }

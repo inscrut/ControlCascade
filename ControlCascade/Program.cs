@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace ControlCascade
 {
@@ -22,6 +23,7 @@ namespace ControlCascade
             {
                 xml.Load("config.xml");
                 Console.Clear();
+                Console.WriteLine("Press Ctrl+C for exit.");
                 foreach (XmlElement conf in xml.DocumentElement)
                 {                    
                     if (Funcs.quest("Change params for " + conf.Name + " script?"))
@@ -39,6 +41,11 @@ namespace ControlCascade
                 if (Funcs.quest("Save config?")) xml.Save("config.xml");
                 if (Funcs.quest("Start exec?"))
                 {
+                    var conf = XDocument.Parse(File.ReadAllText("config.xml"));
+                    
+                    Funcs.execBat(conf.Root.Element("negative").Attribute("file").Value, Funcs.getArgs(conf.Root.Element("negative")));
+                    Funcs.execBat(conf.Root.Element("positive").Attribute("file").Value, Funcs.getArgs(conf.Root.Element("positive")));
+                    Funcs.execBat(conf.Root.Element("cascade").Attribute("file").Value, Funcs.getArgs(conf.Root.Element("cascade")));
 
                 }
             }
