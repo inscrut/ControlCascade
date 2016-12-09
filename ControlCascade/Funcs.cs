@@ -12,18 +12,31 @@ namespace ControlCascade
 {
     internal static class Funcs
     {
-        internal static void execBat(string bat, string arg)
+        internal static int execBat(string bat, string arg)
         {
             Process exe = new Process();
+
             exe.StartInfo.FileName = bat;
             exe.StartInfo.Arguments = arg;
             exe.StartInfo.UseShellExecute = false;
             exe.StartInfo.RedirectStandardOutput = true;
             exe.Start();
 
-            Console.WriteLine(exe.StandardOutput.ReadToEnd());
-
+            using (var stream = exe.StandardOutput.BaseStream)
+            {
+                using (StreamReader sr = new StreamReader(stream))
+                {
+                    while (!sr.EndOfStream)
+                    {
+                        Console.WriteLine(sr.ReadLine());
+                    }
+                    sr.Close();
+                }
+                stream.Close();
+            }
             exe.WaitForExit();
+
+            return exe.ExitCode;
         }
 
         internal static void check() {
@@ -51,20 +64,15 @@ namespace ControlCascade
 
             #region negative
             XmlNode element = doc.CreateElement("negative");
-            doc.DocumentElement.AppendChild(element);
-
+            XmlNode subElement = doc.CreateElement("sub");
             XmlAttribute attr = doc.CreateAttribute("file");
             attr.Value = "make_neg.bat";
 
             element.Attributes.Append(attr);
+            doc.DocumentElement.AppendChild(element);
 
-            XmlNode subElement = doc.CreateElement("weight");
-            subElement.InnerText = "128";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("heigth");
-            subElement.InnerText = "128";
-            element.AppendChild(subElement);
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "weight", "-w", "100"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "heigth", "-h", "100"));
 
             subElement = doc.CreateElement("args");
             subElement.InnerText = "-mode 1 -outfile Bad.txt -outdir Bad";
@@ -73,86 +81,40 @@ namespace ControlCascade
 
             #region positive
             element = doc.CreateElement("positive");
-            doc.DocumentElement.AppendChild(element);
-
             attr = doc.CreateAttribute("file");
             attr.Value = "make_pos.bat";
-
             element.Attributes.Append(attr);
+            doc.DocumentElement.AppendChild(element);
 
-            subElement = doc.CreateElement("weight");
-            subElement.InnerText = "24";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("heigth");
-            subElement.InnerText = "24";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("num");
-            subElement.InnerText = "2000";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("maxxangle");
-            subElement.InnerText = "0.3";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("maxyangle");
-            subElement.InnerText = "0.0";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("maxzangle");
-            subElement.InnerText = "0.0";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("bgcolor");
-            subElement.InnerText = "0";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("bgthresh");
-            subElement.InnerText = "0";
-            element.AppendChild(subElement);
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "img", "-img", "Good/target.png"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "weight", "-w", "24"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "heigth", "-h", "24"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "num", "-num", "2000"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "maxxangle", "-maxxangle", "0.1"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "maxyangle", "-maxyangle", "0.1"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "maxzangle", "-maxzangle", "0.1"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "bgcolor", "-bgcolor", "0"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "bgthresh", "-bgthresh", "0"));
 
             subElement = doc.CreateElement("args");
-            subElement.InnerText = "-img Good/cur1.png -bg Bad.txt -vec Good.vec";
+            subElement.InnerText = "-bg Bad.txt -vec Good.vec";
             element.AppendChild(subElement);
             #endregion
 
             #region cascade
             element = doc.CreateElement("cascade");
-            doc.DocumentElement.AppendChild(element);
-
             attr = doc.CreateAttribute("file");
             attr.Value = "make_cas.bat";
-
             element.Attributes.Append(attr);
+            doc.DocumentElement.AppendChild(element);
 
-            subElement = doc.CreateElement("weight");
-            subElement.InnerText = "24";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("heigth");
-            subElement.InnerText = "24";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("pos");
-            subElement.InnerText = "1000";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("neg");
-            subElement.InnerText = "500";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("stages");
-            subElement.InnerText = "7";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("hitrate");
-            subElement.InnerText = "0.95";
-            element.AppendChild(subElement);
-
-            subElement = doc.CreateElement("alarmrate");
-            subElement.InnerText = "0.5";
-            element.AppendChild(subElement);
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "weight", "-w", "24"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "heigth", "-h", "24"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "pos", "-numPos", "500"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "neg", "-numNeg", "500"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "stages", "-numStages", "27"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "hitrate", "-minHitRate", "0.999"));
+            element.AppendChild(node(ref doc, ref subElement, ref attr, "alarmrate", "-maxFalseAlarmRate", "0.5"));
 
             subElement = doc.CreateElement("args");
             subElement.InnerText = "-data Result -vec Good.vec -bg Bad.txt -numThreads 4 -precalcValBufSize 1024 -precalcIdxBufSize 1024 -mode ALL -stageType BOOST -featureType HAAR";
@@ -161,6 +123,17 @@ namespace ControlCascade
 
             doc.Save("config.xml");
             doc = null;
+        }
+
+        private static XmlNode node(ref XmlDocument _doc, ref XmlNode _subElement, ref XmlAttribute _attr, string _nodename, string _cmd, string _value)
+        {
+            _subElement = _doc.CreateElement(_nodename);
+            _attr = _doc.CreateAttribute("cmd");
+            _subElement.InnerText = _value;
+            _attr.Value = _cmd;
+            _subElement.Attributes.Append(_attr);
+
+            return _subElement;
         }
 
         internal static bool quest(string q)
@@ -177,13 +150,20 @@ namespace ControlCascade
             }
         }
 
-        internal static string getArgs(XElement name) //24 25 "-mode 1 -outfile Bad.txt -outdir Bad"
+        internal static string getArgs(XmlNode el)
         {
-            foreach (XElement item in name.Elements())
+            string res = "";
+            foreach (XmlNode item in el.ChildNodes)
             {
-                string s= item.Value;
+                try
+                {
+                    res += item.Attributes.GetNamedItem("cmd").Value + " ";
+                }
+                catch { }
+                res += item.InnerText + " ";
             }
-            return "";
+
+            return res.Substring(0, res.Length - 1);
         }
     }
 }

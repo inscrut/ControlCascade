@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Linq;
 
 namespace ControlCascade
 {
@@ -14,7 +7,7 @@ namespace ControlCascade
     {
         static void Main(string[] args)
         {
-            //Funcs.check();
+            Funcs.check();
 
             Console.CancelKeyPress += Console_CancelKeyPress;
 
@@ -23,12 +16,39 @@ namespace ControlCascade
             {
                 xml.Load("config.xml");
                 Console.Clear();
-                Console.WriteLine("Press Ctrl+C for exit.");
-                foreach (XmlElement conf in xml.DocumentElement)
-                {                    
-                    if (Funcs.quest("Change params for " + conf.Name + " script?"))
+                Console.WriteLine("Press Ctrl+C for exit.\r\n");
+
+                Console.WriteLine("Choose work mode:");
+                Console.WriteLine("1) Change config file\r\n2) Training");
+                Console.Write("Set: ");
+
+                ConsoleKey ch = Console.ReadKey(false).Key;
+
+                Console.WriteLine("\r\n");
+
+                if(ch == ConsoleKey.D1)
+                {
+                    foreach (XmlElement conf in xml.DocumentElement)
                     {
-                        foreach (XmlElement item in conf)
+                        if (Funcs.quest("Change params for " + conf.Name + " script?"))
+                        {
+                            foreach (XmlElement item in conf)
+                            {
+                                if (item.Name == "args") continue;
+                                Console.Write("{0} ({1}): ", item.Name, item.InnerText);
+                                string line = Console.ReadLine();
+                                if (line != "") item.InnerText = line;
+                            }
+                        }
+                    }
+
+                    if (Funcs.quest("Save config?")) xml.Save("config.xml");
+                }
+                else if(ch == ConsoleKey.D2)
+                {
+                    if (Funcs.quest("Change params for \"negative\" script?"))
+                    {
+                        foreach (XmlNode item in xml.DocumentElement.GetElementsByTagName("negative")[0])
                         {
                             if (item.Name == "args") continue;
                             Console.Write("{0} ({1}): ", item.Name, item.InnerText);
@@ -36,16 +56,34 @@ namespace ControlCascade
                             if (line != "") item.InnerText = line;
                         }
                     }
-                }
+                    if (Funcs.quest("Exec the \"negative\" programm?"))
+                        Console.WriteLine("\r\nExit with code {0}\r\n", Funcs.execBat(xml.DocumentElement.GetElementsByTagName("negative").Item(0).Attributes.GetNamedItem("file").Value, Funcs.getArgs(xml.DocumentElement.GetElementsByTagName("negative").Item(0))));
 
-                if (Funcs.quest("Save config?")) xml.Save("config.xml");
-                if (Funcs.quest("Start exec?"))
-                {
-                    var conf = XDocument.Parse(File.ReadAllText("config.xml"));
-                    
-                    Funcs.execBat(conf.Root.Element("negative").Attribute("file").Value, Funcs.getArgs(conf.Root.Element("negative")));
-                    Funcs.execBat(conf.Root.Element("positive").Attribute("file").Value, Funcs.getArgs(conf.Root.Element("positive")));
-                    Funcs.execBat(conf.Root.Element("cascade").Attribute("file").Value, Funcs.getArgs(conf.Root.Element("cascade")));
+                    if (Funcs.quest("Change params for \"positive\" script?"))
+                    {
+                        foreach (XmlNode item in xml.DocumentElement.GetElementsByTagName("positive")[0])
+                        {
+                            if (item.Name == "args") continue;
+                            Console.Write("{0} ({1}): ", item.Name, item.InnerText);
+                            string line = Console.ReadLine();
+                            if (line != "") item.InnerText = line;
+                        }
+                    }
+                    if (Funcs.quest("Exec the \"positive\" programm?"))
+                        Console.WriteLine("\r\nExit with code {0}\r\n", Funcs.execBat(xml.DocumentElement.GetElementsByTagName("positive").Item(0).Attributes.GetNamedItem("file").Value, Funcs.getArgs(xml.DocumentElement.GetElementsByTagName("positive").Item(0))));
+
+                    if (Funcs.quest("Change params for \"cascade\" script?"))
+                    {
+                        foreach (XmlNode item in xml.DocumentElement.GetElementsByTagName("cascade")[0])
+                        {
+                            if (item.Name == "args") continue;
+                            Console.Write("{0} ({1}): ", item.Name, item.InnerText);
+                            string line = Console.ReadLine();
+                            if (line != "") item.InnerText = line;
+                        }
+                    }
+                    if (Funcs.quest("Exec the \"cascade\" programm?"))
+                        Console.WriteLine("\r\nExit with code {0}\r\n", Funcs.execBat(xml.DocumentElement.GetElementsByTagName("cascade").Item(0).Attributes.GetNamedItem("file").Value, Funcs.getArgs(xml.DocumentElement.GetElementsByTagName("cascade").Item(0))));
 
                 }
             }
