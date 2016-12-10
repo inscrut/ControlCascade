@@ -14,29 +14,43 @@ namespace ControlCascade
     {
         internal static int execBat(string bat, string arg)
         {
-            Process exe = new Process();
-
-            exe.StartInfo.FileName = bat;
-            exe.StartInfo.Arguments = arg;
-            exe.StartInfo.UseShellExecute = false;
-            exe.StartInfo.RedirectStandardOutput = true;
-            exe.Start();
-
-            using (var stream = exe.StandardOutput.BaseStream)
+            using (Process exe = new Process())
             {
-                using (StreamReader sr = new StreamReader(stream))
-                {
-                    while (!sr.EndOfStream)
-                    {
-                        Console.WriteLine(sr.ReadLine());
-                    }
-                    sr.Close();
-                }
-                stream.Close();
-            }
-            exe.WaitForExit();
+                exe.StartInfo.FileName = "cmd.exe";
+                exe.StartInfo.Arguments = "/C START \"" + bat + "\" /WAIT \"" + bat + "\" " + arg;
+                exe.StartInfo.UseShellExecute = false;
+                exe.StartInfo.RedirectStandardOutput = true;
+                exe.Start();
 
-            return exe.ExitCode;
+                using (var stream = exe.StandardOutput.BaseStream)
+                {
+                    using (StreamReader sr = new StreamReader(stream))
+                    {
+                        using (StreamWriter sw = new StreamWriter(bat + "_log.txt"))
+                        {
+                            while (!sr.EndOfStream)
+                            {
+                                sw.WriteLine(sr.ReadLine());
+                            }
+                            sw.Close();
+                        }
+                        sr.Close();
+                    }
+                    stream.Close();
+                }
+                exe.WaitForExit();
+
+                return exe.ExitCode;
+            }
+        }
+
+        internal static void clearDir(string dir)
+        {
+            if (!Directory.Exists(dir)) return;
+            if (Directory.GetFiles(dir).Length == 0) return;
+            else
+                foreach (var file in Directory.GetFiles(dir))
+                    File.Delete(file);
         }
 
         internal static void check() {
